@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cyber Space Shooter</title>
+    <title>BRANNGAME - Cyber Shooter</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #05050a; overflow: hidden; }
@@ -12,28 +12,37 @@
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen font-mono text-white p-4 select-none">
 
+    <div id="menu-screen" class="absolute inset-0 bg-[#05050a] z-30 flex flex-col items-center justify-center p-4">
+        <h1 class="text-5xl font-black text-[#00f0ff] tracking-widest mb-1 shadow-[0_0_15px_#00f0ff] uppercase">BRANNGAME</h1>
+        <p class="text-xs text-zinc-500 mb-8 uppercase tracking-widest">Max Drop Rate Enhanced Version</p>
+        
+        <div class="flex flex-col gap-3 w-64">
+            <button onclick="startGame('easy')" class="bg-green-500/20 border border-green-500 hover:bg-green-500 hover:text-black font-bold py-3 rounded-lg transition uppercase tracking-wider">🟢 Easy</button>
+            <button onclick="startGame('medium')" class="bg-yellow-500/20 border border-yellow-500 hover:bg-yellow-500 hover:text-black font-bold py-3 rounded-lg transition uppercase tracking-wider">🟡 Medium</button>
+            <button onclick="startGame('hard')" class="bg-orange-500/20 border border-orange-500 hover:bg-orange-500 hover:text-black font-bold py-3 rounded-lg transition uppercase tracking-wider">🟠 Hard</button>
+            <button onclick="startGame('extreme')" class="bg-red-500/20 border border-red-500 hover:bg-red-500 hover:text-black font-bold py-3 rounded-lg transition uppercase tracking-wider animate-pulse">🔴 EXTREME</button>
+        </div>
+    </div>
+
     <div class="w-[400px] flex justify-between items-center mb-2 px-2">
         <div>SCORE: <span id="score-text" class="text-[#00f0ff] font-bold">0</span></div>
+        <div>WEAPON: <span id="weapon-text" class="text-[#00ff66] font-bold">LVL 1</span></div>
+        <div>BUFF: <span id="buff-text" class="text-zinc-500 font-bold">NONE</span></div>
         <div>HP: <span id="hp-text" class="text-[#ff007f] font-bold">3</span></div>
     </div>
 
     <canvas id="gameCanvas" width="400" height="500"></canvas>
 
-    <div class="flex gap-8 mt-4 md:hidden w-[400px] justify-center">
-        <button id="btn-left" class="bg-[#121225] border border-[#00f0ff] active:bg-[#00f0ff] active:text-black w-16 h-16 rounded-full text-2xl font-bold flex items-center justify-center">◀</button>
-        <button id="btn-shoot" class="bg-[#ff007f] active:bg-[#ff55a5] w-20 h-16 rounded-xl text-md font-black tracking-wider flex items-center justify-center text-white shadow-lg">FIRE</button>
-        <button id="btn-right" class="bg-[#121225] border border-[#00f0ff] active:bg-[#00f0ff] active:text-black w-16 h-16 rounded-full text-2xl font-bold flex items-center justify-center">▶</button>
-    </div>
-
-    <div class="text-xs text-zinc-500 mt-2 hidden md:block">
-        Gunakan tombol <span class="text-white">Panah Kiri / Kanan</span> untuk bergerak, dan <span class="text-white">Spasi</span> untuk Menembak!
+    <div class="flex gap-12 mt-4 md:hidden w-[400px] justify-center">
+        <button id="btn-left" class="bg-[#121225] border border-[#00f0ff] active:bg-[#00f0ff] active:text-black w-20 h-16 rounded-xl text-2xl font-bold flex items-center justify-center">◀</button>
+        <button id="btn-right" class="bg-[#121225] border border-[#00f0ff] active:bg-[#00f0ff] active:text-black w-20 h-16 rounded-xl text-2xl font-bold flex items-center justify-center">▶</button>
     </div>
 
     <div id="game-over" class="hidden absolute inset-0 bg-black/95 flex flex-col items-center justify-center z-20">
         <h1 class="text-4xl font-black text-[#ff007f] tracking-widest mb-2 animate-pulse">MISSION FAILED</h1>
         <p id="final-score" class="text-xl text-zinc-400 mb-6">Skor Akhir: 0</p>
-        <button onclick="resetGame()" class="bg-[#00f0ff] hover:bg-[#00c8d7] text-black font-black py-3 px-8 rounded-lg transition-all shadow-[0_0_15px_#00f0ff] uppercase">
-            REDEPLOY 🔄
+        <button onclick="backToMenu()" class="bg-[#00f0ff] hover:bg-[#00c8d7] text-black font-black py-3 px-8 rounded-lg transition-all shadow-[0_0_15px_#00f0ff] uppercase">
+            RETURN TO BASE 🔄
         </button>
     </div>
 
@@ -41,31 +50,76 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // State Game
         let player = { x: 180, y: 440, width: 40, height: 30, speed: 6 };
         let bullets = [];
         let enemies = [];
+        let items = []; 
+        
         let score = 0;
         let hp = 3;
+        let weaponLevel = 1; 
         let gameOver = false;
+        let gameActive = false;
+        let isShielded = false; 
+        let shieldTimer = 0;
+        
         let keys = {};
-        let spawnInterval = 1200; // Tempo munculnya musuh (ms)
+        let enemySpeedModifier = 1;
+        let spawnInterval = 1200; 
         let lastSpawn = 0;
+        let lastShot = 0;
+        let shootSpeed = 300; 
 
-        // Deteksi Keyboard untuk PC
-        window.addEventListener('keydown', (e) => { keys[e.code] = true; if(e.code === "Space") shootBullet(); });
+        window.addEventListener('keydown', (e) => { keys[e.code] = true; });
         window.addEventListener('keyup', (e) => { keys[e.code] = false; });
 
-        // Deteksi Tombol untuk HP
         let activeMove = null;
         document.getElementById('btn-left').addEventListener('touchstart', (e) => { e.preventDefault(); activeMove = 'left'; });
         document.getElementById('btn-right').addEventListener('touchstart', (e) => { e.preventDefault(); activeMove = 'right'; });
-        document.getElementById('btn-shoot').addEventListener('touchstart', (e) => { e.preventDefault(); shootBullet(); });
         window.addEventListener('touchend', () => activeMove = null);
 
-        function shootBullet() {
-            if (gameOver) return;
-            bullets.push({ x: player.x + player.width / 2 - 2, y: player.y, width: 4, height: 12, speed: 7 });
+        function startGame(difficulty) {
+            document.getElementById('menu-screen').classList.add('hidden');
+            document.getElementById('game-over').classList.add('hidden');
+            
+            if (difficulty === 'easy') {
+                hp = 4; enemySpeedModifier = 1.2; spawnInterval = 1400;
+            } else if (difficulty === 'medium') {
+                hp = 3; enemySpeedModifier = 2.0; spawnInterval = 1100;
+            } else if (difficulty === 'hard') {
+                hp = 2; enemySpeedModifier = 2.8; spawnInterval = 800;
+            } else if (difficulty === 'extreme') {
+                hp = 1; enemySpeedModifier = 3.8; spawnInterval = 500;
+            }
+
+            score = 0;
+            weaponLevel = 1;
+            isShielded = false;
+            bullets = [];
+            enemies = [];
+            items = [];
+            player.x = 180;
+            gameOver = false;
+            gameActive = true;
+
+            updateHUD();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function autoShoot(timestamp) {
+            if (timestamp - lastShot > shootSpeed) {
+                if (weaponLevel === 1) {
+                    bullets.push({ x: player.x + player.width / 2 - 2, y: player.y, width: 4, height: 12, speed: 8 });
+                } else if (weaponLevel === 2) {
+                    bullets.push({ x: player.x + 5, y: player.y + 10, width: 4, height: 12, speed: 8 });
+                    bullets.push({ x: player.x + player.width - 9, y: player.y + 10, width: 4, height: 12, speed: 8 });
+                } else if (weaponLevel >= 3) {
+                    bullets.push({ x: player.x + player.width / 2 - 2, y: player.y, width: 4, height: 12, speed: 8 });
+                    bullets.push({ x: player.x + 2, y: player.y + 10, width: 4, height: 12, speed: 8 });
+                    bullets.push({ x: player.x + player.width - 6, y: player.y + 10, width: 4, height: 12, speed: 8 });
+                }
+                lastShot = timestamp;
+            }
         }
 
         function spawnEnemy(timestamp) {
@@ -76,60 +130,90 @@
                     y: -size,
                     width: size,
                     height: size,
-                    speed: Math.random() * 2 + 1.5
+                    speed: (Math.random() * 1.5 + 1) * enemySpeedModifier
                 });
                 lastSpawn = timestamp;
             }
         }
 
         function update(timestamp) {
-            if (gameOver) return;
+            if (gameOver || !gameActive) return;
 
-            // Pergerakan Player (PC & Mobile)
-            if (keys['ArrowLeft'] || activeMove === 'left') { if (player.x > 0) player.x -= player.speed; }
-            if (keys['ArrowRight'] || activeMove === 'right') { if (player.x < canvas.width - player.width) player.x += player.speed; }
+            if (keys['ArrowLeft'] || keys['KeyA'] || activeMove === 'left') { if (player.x > 0) player.x -= player.speed; }
+            if (keys['ArrowRight'] || keys['KeyD'] || activeMove === 'right') { if (player.x < canvas.width - player.width) player.x += player.speed; }
 
-            // Update Peluru
+            autoShoot(timestamp);
+
+            if (isShielded) {
+                if (timestamp > shieldTimer) {
+                    isShielded = false;
+                    updateHUD();
+                }
+            }
+
             bullets.forEach((bullet, bIndex) => {
                 bullet.y -= bullet.speed;
-                if (bullet.y < 0) bullets.splice(bIndex, 1); // Hapus peluru keluar layar
+                if (bullet.y < 0) bullets.splice(bIndex, 1);
             });
 
-            // Munculkan Musuh
             spawnEnemy(timestamp);
-
-            // Update Posisi Musuh
             enemies.forEach((enemy, eIndex) => {
                 enemy.y += enemy.speed;
 
-                // Jika musuh lolos ke bawah layar
                 if (enemy.y > canvas.height) {
                     enemies.splice(eIndex, 1);
-                    triggerVibrate(100);
-                    hp--;
-                    updateHUD();
+                    if (!isShielded) {
+                        hp--; triggerVibrate(100); updateHUD();
+                    }
                 }
 
-                // Cek Tabrakan Musuh dengan Player
                 if (checkCollision(player, enemy)) {
                     enemies.splice(eIndex, 1);
-                    triggerVibrate(300);
-                    hp--;
-                    updateHUD();
+                    if (!isShielded) {
+                        hp--; triggerVibrate(300); updateHUD();
+                    } else {
+                        score += 5; 
+                        triggerVibrate(50);
+                        updateHUD();
+                    }
                 }
 
-                // Cek Tabrakan Peluru dengan Musuh
                 bullets.forEach((bullet, bIndex) => {
                     if (checkCollision(bullet, enemy)) {
+                        if (Math.random() < 0.60) {
+                            let rand = Math.random();
+                            let type = 'bullet';
+                            if (rand > 0.45 && rand < 0.80) type = 'heal';
+                            if (rand >= 0.80) type = 'shield'; 
+
+                            items.push({ x: enemy.x, y: enemy.y, width: 14, height: 14, speed: 2, type: type });
+                        }
+
                         enemies.splice(eIndex, 1);
                         bullets.splice(bIndex, 1);
                         score += 10;
                         updateHUD();
-
-                        // Setiap naik 100 poin, musuh makin cepat muncul
-                        if (score % 100 === 0 && spawnInterval > 500) spawnInterval -= 100;
                     }
                 });
+            });
+
+            items.forEach((item, iIndex) => {
+                item.y += item.speed;
+                if (item.y > canvas.height) items.splice(iIndex, 1);
+
+                if (checkCollision(player, item)) {
+                    if (item.type === 'bullet') {
+                        if (weaponLevel < 3) weaponLevel++;
+                    } else if (item.type === 'heal') {
+                        hp++;
+                    } else if (item.type === 'shield') {
+                        isShielded = true;
+                        shieldTimer = timestamp + 4000; 
+                    }
+                    triggerVibrate(70);
+                    items.splice(iIndex, 1);
+                    updateHUD();
+                }
             });
 
             if (hp <= 0) {
@@ -139,14 +223,21 @@
             }
         }
 
-        // Fungsi menggambar grafis neon di Canvas
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (!gameActive) return;
 
-            // 1. Gambar Player (Segitiga Pesawat Neon)
-            ctx.fillStyle = '#00f0ff';
             ctx.shadowBlur = 15;
-            ctx.shadowColor = '#00f0ff';
+            
+            if (isShielded) {
+                ctx.fillStyle = '#a855f7'; 
+            } else {
+                if (weaponLevel === 1) ctx.fillStyle = '#00f0ff';
+                if (weaponLevel === 2) ctx.fillStyle = '#00ff66';
+                if (weaponLevel >= 3) ctx.fillStyle = '#ffff00';
+            }
+            ctx.shadowColor = ctx.fillStyle;
+
             ctx.beginPath();
             ctx.moveTo(player.x + player.width / 2, player.y);
             ctx.lineTo(player.x, player.y + player.height);
@@ -154,22 +245,33 @@
             ctx.closePath();
             ctx.fill();
 
-            // 2. Gambar Peluru (Garis Neon Hijau)
-            ctx.fillStyle = '#00ff66';
-            ctx.shadowColor = '#00ff66';
-            bullets.forEach(bullet => {
-                ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
-            });
+            // Gambar Peluru
+            ctx.fillStyle = '#00ffff';
+            ctx.shadowColor = '#00ffff';
+            bullets.forEach(bullet => ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height));
 
-            // 3. Gambar Musuh (Kotak Neon Pink/Magenta)
+            // Gambar Musuh
             ctx.fillStyle = '#ff007f';
             ctx.shadowColor = '#ff007f';
-            enemies.forEach(enemy => {
-                ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+            enemies.forEach(enemy => ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height));
+
+            // Gambar Kumpulan Item Drop
+            items.forEach(item => {
+                if (item.type === 'bullet') {
+                    ctx.fillStyle = '#38bdf8'; 
+                } else if (item.type === 'heal') {
+                    ctx.fillStyle = '#22c55e'; 
+                } else if (item.type === 'shield') {
+                    ctx.fillStyle = '#c084fc'; 
+                }
+                ctx.shadowColor = ctx.fillStyle;
+                
+                ctx.beginPath();
+                ctx.arc(item.x + item.width/2, item.y + item.height/2, item.width/2, 0, Math.PI * 2);
+                ctx.fill();
             });
 
-            // Reset efek shadow biar tidak berat
-            ctx.shadowBlur = 0;
+            ctx.shadowBlur = 0; 
         }
 
         function checkCollision(rect1, rect2) {
@@ -182,33 +284,33 @@
         function updateHUD() {
             document.getElementById('score-text').innerText = score;
             document.getElementById('hp-text').innerText = hp;
+            document.getElementById('weapon-text').innerText = `LVL ${weaponLevel}`;
+            
+            const buffText = document.getElementById('buff-text');
+            if (isShielded) {
+                buffText.innerText = "SHIELDED";
+                buffText.className = "text-purple-400 font-bold animate-pulse";
+            } else {
+                buffText.innerText = "NONE";
+                buffText.className = "text-zinc-500 font-bold";
+            }
         }
 
         function triggerVibrate(ms) {
             if (navigator.vibrate) navigator.vibrate(ms);
         }
 
-        function resetGame() {
-            player.x = 180;
-            bullets = [];
-            enemies = [];
-            score = 0;
-            hp = 3;
-            spawnInterval = 1200;
-            gameOver = false;
-            updateHUD();
+        function backToMenu() {
             document.getElementById('game-over').classList.add('hidden');
-            requestAnimationFrame(gameLoop);
+            document.getElementById('menu-screen').classList.remove('hidden');
+            gameActive = false;
         }
 
         function gameLoop(timestamp) {
             update(timestamp);
             draw();
-            if (!gameOver) requestAnimationFrame(gameLoop);
+            if (!gameOver && gameActive) requestAnimationFrame(gameLoop);
         }
-
-        // Mulai Loop Game
-        requestAnimationFrame(gameLoop);
     </script>
 </body>
 </html>
