@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BRANNGAME - Direct Play</title>
+    <title>BRANNGAME - Universal Play</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #05050a; overflow: hidden; }
@@ -12,8 +12,10 @@
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen font-mono text-white p-4 select-none">
 
+    <!-- LAYER SYSTEM: INTERFACE UTAMA GAME -->
     <div id="game-layer" class="flex flex-col items-center justify-center w-full">
         
+        <!-- MENU UTAMA -->
         <div id="menu-screen" class="flex flex-col items-center justify-center p-4">
             <h1 class="text-5xl font-black text-[#00f0ff] tracking-widest mb-1 shadow-[0_0_15px_#00f0ff] uppercase text-center">BRANNGAME</h1>
             <div class="flex items-center gap-2 mb-6 justify-center">
@@ -33,6 +35,7 @@
             </div>
         </div>
 
+        <!-- MENU GARASI -->
         <div id="garage-screen" class="hidden flex flex-col items-center justify-center p-4">
             <h2 class="text-3xl font-black text-purple-400 tracking-widest mb-2 uppercase">HANGAR / GARAGE</h2>
             <div class="mb-6 text-yellow-400 font-bold text-lg">YOUR WALLET: 🪙 <span id="garage-coins">0</span></div>
@@ -63,6 +66,7 @@
             <button onclick="closeGarage()" class="bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-2 px-8 rounded-lg text-sm tracking-wide transition uppercase cursor-pointer">🔙 BACK TO MENU</button>
         </div>
 
+        <!-- HUD & GAMEPLAY CANVAS -->
         <div id="gameplay-area" class="hidden flex flex-col items-center">
             <div class="w-[400px] flex flex-col gap-1 mb-2 px-2">
                 <div class="flex justify-between items-center text-sm">
@@ -78,12 +82,14 @@
 
             <canvas id="gameCanvas" width="400" height="500"></canvas>
 
+            <!-- Kontrol Layar Sentuh -->
             <div class="flex gap-12 mt-4 md:hidden w-[400px] justify-center">
                 <button id="btn-left" class="bg-[#121225] border border-[#00f0ff] active:bg-[#00f0ff] active:text-black w-20 h-16 rounded-xl text-2xl font-bold flex items-center justify-center cursor-pointer">◀</button>
                 <button id="btn-right" class="bg-[#121225] border border-[#00f0ff] active:bg-[#00f0ff] active:text-black w-20 h-16 rounded-xl text-2xl font-bold flex items-center justify-center cursor-pointer">▶</button>
             </div>
         </div>
 
+        <!-- Screen Game Over -->
         <div id="game-over" class="hidden fixed inset-0 bg-black/95 flex flex-col items-center justify-center z-50">
             <h1 id="end-title" class="text-4xl font-black text-[#ff007f] tracking-widest mb-2">MISSION FAILED</h1>
             <p id="final-score" class="text-xl text-zinc-400 mb-1">Skor Akhir: 0</p>
@@ -99,7 +105,6 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Otomatis Admin Mode Aktif & Semua Pesawat Terbuka
         let totalCoins = 9999; 
         let ownedShips = [true, true, true]; 
         let activeShipIndex = 0; 
@@ -124,12 +129,17 @@
         window.addEventListener('keydown', (e) => { keys[e.code] = true; });
         window.addEventListener('keyup', (e) => { keys[e.code] = false; });
 
+        // PERBAIKAN: Cek dulu elemen tombolnya ada atau tidak sebelum dipasang Touch Event (Biar PC/Laptop ga error)
         let activeMove = null;
-        document.getElementById('btn-left').addEventListener('touchstart', (e) => { e.preventDefault(); activeMove = 'left'; });
-        document.getElementById('btn-right').addEventListener('touchstart', (e) => { e.preventDefault(); activeMove = 'right'; });
-        window.addEventListener('touchend', () => activeMove = null);
+        const btnLeft = document.getElementById('btn-left');
+        const btnRight = document.getElementById('btn-right');
 
-        // Langsung tampilkan koin di awal load
+        if(btnLeft && btnRight) {
+            btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); activeMove = 'left'; });
+            btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); activeMove = 'right'; });
+            window.addEventListener('touchend', () => activeMove = null);
+        }
+
         document.getElementById('menu-coins').innerText = totalCoins;
 
         function openGarage() {
@@ -240,5 +250,120 @@
 
             autoShoot(timestamp);
 
-            if (isShielded && timestamp > shieldTimer) { is
-        
+            if (isShielded && timestamp > shieldTimer) { isShielded = false; updateHUD(); }
+
+            particles.forEach((p, index) => {
+                p.x += p.vx; p.y += p.vy; p.alpha -= p.decay;
+                if (p.alpha <= 0) particles.splice(index, 1);
+            });
+
+            bullets.forEach((bullet, bIndex) => {
+                bullet.y -= bullet.speed;
+                if (boss.active && checkCollision(bullet, boss)) {
+                    bullets.splice(bIndex, 1);
+                    boss.hp -= (weaponLevel === 1) ? 2 : (weaponLevel === 2) ? 4 : 6;
+                    createExplosion(bullet.x, bullet.y, '#ff0000');
+                    triggerVibrate(30);
+                    
+                    let hpPercent = (boss.hp / boss.maxHp) * 100;
+                    document.getElementById('boss-hp-bar').style.width = `${Math.max(0, hpPercent)}%`;
+
+                    if (boss.hp <= 0) {
+                        createExplosion(boss.x + 50, boss.y + 25, '#ff007f');
+                        score += 500; sessionCoins += 50; 
+                        endGame(true);
+                    }
+                    return;
+                }
+                if (bullet.y < 0) bullets.splice(bIndex, 1);
+            });
+
+            if (!boss.active) {
+                spawnEnemy(timestamp);
+            } else {
+                if (boss.y < 40) boss.y += 1.5;
+                boss.x += boss.speed * boss.direction;
+                if (boss.x <= 0 || boss.x >= canvas.width - boss.width) boss.direction *= -1;
+
+                if (timestamp - lastBossShot > 750) {
+                    enemyBullets.push({ x: boss.x + 15, y: boss.y + boss.height, width: 8, height: 8, speed: 4.5 });
+                    enemyBullets.push({ x: boss.x + boss.width - 23, y: boss.y + boss.height, width: 8, height: 8, speed: 4.5 });
+                    lastBossShot = timestamp;
+                }
+            }
+
+            enemyBullets.forEach((eb, ebIndex) => {
+                eb.y += eb.speed;
+                if (checkCollision(eb, player)) {
+                    enemyBullets.splice(ebIndex, 1);
+                    if (!isShielded) { hp--; triggerVibrate(300); updateHUD(); }
+                }
+                if (eb.y > canvas.height) enemyBullets.splice(ebIndex, 1);
+            });
+
+            enemies.forEach((enemy, eIndex) => {
+                enemy.y += enemy.speed;
+                if (enemy.y > canvas.height) {
+                    enemies.splice(eIndex, 1);
+                    if (!isShielded) { hp--; triggerVibrate(100); updateHUD(); }
+                }
+
+                if (checkCollision(player, enemy)) {
+                    enemies.splice(eIndex, 1);
+                    createExplosion(enemy.x, enemy.y, '#ff007f');
+                    if (!isShielded) { hp--; triggerVibrate(300); updateHUD(); }
+                }
+
+                bullets.forEach((bullet, bIndex) => {
+                    if (checkCollision(bullet, enemy)) {
+                        createExplosion(enemy.x + enemy.width/2, enemy.y + enemy.height/2, '#ff007f');
+                        
+                        let itemRand = Math.random();
+                        if (itemRand < 0.35) { 
+                            items.push({ x: enemy.x, y: enemy.y, width: 12, height: 12, speed: 2, type: 'coin' });
+                        } else if (itemRand >= 0.35 && itemRand < 0.70) { 
+                            let rand = Math.random();
+                            let type = 'bullet';
+                            if (rand > 0.45 && rand < 0.75) type = 'heal';
+                            if (rand >= 0.75) type = 'shield';
+                            items.push({ x: enemy.x, y: enemy.y, width: 14, height: 14, speed: 2, type: type });
+                        }
+
+                        enemies.splice(eIndex, 1);
+                        bullets.splice(bIndex, 1);
+                        score += 10; waveKills++;
+
+                        if (currentWave === 1 && waveKills >= 15) {
+                            currentWave = 2; waveKills = 0; updateHUD();
+                        } else if (currentWave === 2 && waveKills >= 15) {
+                            currentWave = "BOSS"; boss.active = true;
+                            document.getElementById('boss-hp-container').classList.remove('hidden');
+                            updateHUD();
+                        }
+                        updateHUD();
+                    }
+                });
+            });
+
+            items.forEach((item, iIndex) => {
+                item.y += item.speed;
+                if (item.y > canvas.height) items.splice(iIndex, 1);
+
+                if (checkCollision(player, item)) {
+                    if (item.type === 'coin') { sessionCoins += 5; } 
+                    else if (item.type === 'bullet') { if (weaponLevel < 3) weaponLevel++; }
+                    else if (item.type === 'heal') { hp++; }
+                    else if (item.type === 'shield') { isShielded = true; shieldTimer = timestamp + 4000; }
+                    
+                    triggerVibrate(60);
+                    items.splice(iIndex, 1);
+                    updateHUD();
+                }
+            });
+
+            if (hp <= 0) endGame(false);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (!
