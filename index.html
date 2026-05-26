@@ -3,19 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BRANNGAME - Universal Play</title>
+    <title>BRANNGAME - Fixed Play</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #05050a; overflow: hidden; }
+        body { background-color: #05050a; overflow: hidden; touch-action: manipulation; }
         canvas { border: 2px solid #00f0ff; background: #0b0b16; box-shadow: 0 0 20px rgba(0, 240, 255, 0.2); }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen font-mono text-white p-4 select-none">
 
-    <!-- LAYER SYSTEM: INTERFACE UTAMA GAME -->
     <div id="game-layer" class="flex flex-col items-center justify-center w-full">
         
-        <!-- MENU UTAMA -->
         <div id="menu-screen" class="flex flex-col items-center justify-center p-4">
             <h1 class="text-5xl font-black text-[#00f0ff] tracking-widest mb-1 shadow-[0_0_15px_#00f0ff] uppercase text-center">BRANNGAME</h1>
             <div class="flex items-center gap-2 mb-6 justify-center">
@@ -23,7 +21,7 @@
             </div>
             
             <div class="mb-6 bg-[#121225] border border-yellow-500/50 px-6 py-2 rounded-full flex items-center gap-2 text-xl font-bold text-yellow-400 shadow-[0_0_10px_rgba(234,179,8,0.2)]">
-                🪙 COINS: <span id="menu-coins">0</span>
+                🪙 COINS: <span id="menu-coins">9999</span>
             </div>
 
             <div class="flex flex-col gap-3 w-64">
@@ -35,10 +33,9 @@
             </div>
         </div>
 
-        <!-- MENU GARASI -->
         <div id="garage-screen" class="hidden flex flex-col items-center justify-center p-4">
             <h2 class="text-3xl font-black text-purple-400 tracking-widest mb-2 uppercase">HANGAR / GARAGE</h2>
-            <div class="mb-6 text-yellow-400 font-bold text-lg">YOUR WALLET: 🪙 <span id="garage-coins">0</span></div>
+            <div class="mb-6 text-yellow-400 font-bold text-lg">YOUR WALLET: 🪙 <span id="garage-coins">9999</span></div>
             
             <div class="flex flex-col gap-4 w-80 max-h-[320px] overflow-y-auto mb-6 px-2">
                 <div class="bg-[#121225] border border-blue-500 p-3 rounded-xl flex items-center justify-between">
@@ -66,7 +63,6 @@
             <button onclick="closeGarage()" class="bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-2 px-8 rounded-lg text-sm tracking-wide transition uppercase cursor-pointer">🔙 BACK TO MENU</button>
         </div>
 
-        <!-- HUD & GAMEPLAY CANVAS -->
         <div id="gameplay-area" class="hidden flex flex-col items-center">
             <div class="w-[400px] flex flex-col gap-1 mb-2 px-2">
                 <div class="flex justify-between items-center text-sm">
@@ -80,16 +76,14 @@
                 </div>
             </div>
 
-            <canvas id="gameCanvas" width="400" height="500"></canvas>
+            <canvas id="gameCanvas" width="370" height="480"></canvas>
 
-            <!-- Kontrol Layar Sentuh -->
-            <div class="flex gap-12 mt-4 md:hidden w-[400px] justify-center">
+            <div class="flex gap-12 mt-4 w-[370px] justify-center">
                 <button id="btn-left" class="bg-[#121225] border border-[#00f0ff] active:bg-[#00f0ff] active:text-black w-20 h-16 rounded-xl text-2xl font-bold flex items-center justify-center cursor-pointer">◀</button>
                 <button id="btn-right" class="bg-[#121225] border border-[#00f0ff] active:bg-[#00f0ff] active:text-black w-20 h-16 rounded-xl text-2xl font-bold flex items-center justify-center cursor-pointer">▶</button>
             </div>
         </div>
 
-        <!-- Screen Game Over -->
         <div id="game-over" class="hidden fixed inset-0 bg-black/95 flex flex-col items-center justify-center z-50">
             <h1 id="end-title" class="text-4xl font-black text-[#ff007f] tracking-widest mb-2">MISSION FAILED</h1>
             <p id="final-score" class="text-xl text-zinc-400 mb-1">Skor Akhir: 0</p>
@@ -115,9 +109,9 @@
             { name: "Hellfire Apex", speed: 6.5, shootSpeed: 180, color: '#ff3333' }
         ];
 
-        let player = { x: 180, y: 440, width: 40, height: 30, speed: 6 };
+        let player = { x: 165, y: 420, width: 40, height: 30, speed: 6 };
         let bullets = []; let enemies = []; let enemyBullets = []; let items = []; let particles = [];
-        let boss = { x: 150, y: -100, width: 100, height: 50, hp: 100, maxHp: 100, speed: 2, direction: 1, active: false };
+        let boss = { x: 135, y: -100, width: 100, height: 50, hp: 100, maxHp: 100, speed: 2, direction: 1, active: false };
         
         let score = 0; let sessionCoins = 0; let hp = 3; let weaponLevel = 1;
         let currentWave = 1; let waveKills = 0; let gameOver = false; let gameActive = false;
@@ -129,18 +123,32 @@
         window.addEventListener('keydown', (e) => { keys[e.code] = true; });
         window.addEventListener('keyup', (e) => { keys[e.code] = false; });
 
-        // PERBAIKAN: Cek dulu elemen tombolnya ada atau tidak sebelum dipasang Touch Event (Biar PC/Laptop ga error)
-        let activeMove = null;
-        const btnLeft = document.getElementById('btn-left');
-        const btnRight = document.getElementById('btn-right');
+        // Dijalankan Amannya Pas Window Selesai Nge-load Sempurna
+        window.onload = function() {
+            document.getElementById('menu-coins').innerText = totalCoins;
+            
+            let activeMove = null;
+            const btnLeft = document.getElementById('btn-left');
+            const btnRight = document.getElementById('btn-right');
 
-        if(btnLeft && btnRight) {
-            btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); activeMove = 'left'; });
-            btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); activeMove = 'right'; });
-            window.addEventListener('touchend', () => activeMove = null);
-        }
+            if(btnLeft && btnRight) {
+                btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); activeMove = 'left'; });
+                btnLeft.addEventListener('mousedown', () => { activeMove = 'left'; });
+                
+                btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); activeMove = 'right'; });
+                btnRight.addEventListener('mousedown', () => { activeMove = 'right'; });
+                
+                window.addEventListener('touchend', () => activeMove = null);
+                window.addEventListener('mouseup', () => activeMove = null);
+            }
 
-        document.getElementById('menu-coins').innerText = totalCoins;
+            // Loop pergerakan internal touch/mouse click holding
+            setInterval(() => {
+                if (!gameActive || gameOver) return;
+                if (activeMove === 'left' && player.x > 0) player.x -= player.speed;
+                if (activeMove === 'right' && player.x < canvas.width - player.width) player.x += player.speed;
+            }, 1000 / 60);
+        };
 
         function openGarage() {
             document.getElementById('menu-screen').classList.add('hidden');
@@ -195,8 +203,8 @@
             score = 0; sessionCoins = 0; weaponLevel = 1; currentWave = 1; waveKills = 0;
             isShielded = false; bullets = []; enemies = []; enemyBullets = []; items = []; particles = [];
             
-            boss.hp = boss.maxHp; boss.x = 150; boss.y = -100; boss.active = false;
-            player.x = 180; gameOver = false; gameActive = true;
+            boss.hp = boss.maxHp; boss.x = 135; boss.y = -100; boss.active = false;
+            player.x = 165; gameOver = false; gameActive = true;
 
             updateHUD();
             requestAnimationFrame(gameLoop);
@@ -245,8 +253,8 @@
         function update(timestamp) {
             if (gameOver || !gameActive) return;
 
-            if (keys['ArrowLeft'] || keys['KeyA'] || activeMove === 'left') { if (player.x > 0) player.x -= player.speed; }
-            if (keys['ArrowRight'] || keys['KeyD'] || activeMove === 'right') { if (player.x < canvas.width - player.width) player.x += player.speed; }
+            if (keys['ArrowLeft'] || keys['KeyA']) { if (player.x > 0) player.x -= player.speed; }
+            if (keys['ArrowRight'] || keys['KeyD']) { if (player.x < canvas.width - player.width) player.x += player.speed; }
 
             autoShoot(timestamp);
 
@@ -352,18 +360,4 @@
                 if (checkCollision(player, item)) {
                     if (item.type === 'coin') { sessionCoins += 5; } 
                     else if (item.type === 'bullet') { if (weaponLevel < 3) weaponLevel++; }
-                    else if (item.type === 'heal') { hp++; }
-                    else if (item.type === 'shield') { isShielded = true; shieldTimer = timestamp + 4000; }
-                    
-                    triggerVibrate(60);
-                    items.splice(iIndex, 1);
-                    updateHUD();
-                }
-            });
-
-            if (hp <= 0) endGame(false);
-        }
-
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (!
+                    else if (item.type === 
