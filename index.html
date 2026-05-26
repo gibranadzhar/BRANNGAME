@@ -3,251 +3,360 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BRANNGAME - Live Flight</title>
+    <title>BRANNGAME - Premium Space Fighter</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #05050a; overflow: hidden; touch-action: none; }
-        canvas { border: 2px solid #00f0ff; background: #0b0b16; box-shadow: 0 0 20px rgba(0, 240, 255, 0.3); }
+        body { background-color: #05050a; overflow: hidden; touch-action: manipulation; }
+        canvas { border: 2px solid #00f0ff; background: #0b0b16; box-shadow: 0 0 20px rgba(0, 240, 255, 0.2); }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen font-mono text-white p-2 select-none">
+<body class="flex flex-col items-center justify-center min-h-screen font-mono text-white p-4 select-none">
 
-    <div class="w-[360px] flex justify-between items-center text-xs mb-2 px-1 tracking-widest text-[#00f0ff]">
-        <div>SCORE: <span id="score-text" class="font-bold text-white">0</span></div>
-        <div>WAVE: <span id="wave-text" class="font-bold text-purple-400">1</span></div>
-        <div>HP: <span id="hp-text" class="font-bold text-red-500">3</span></div>
-    </div>
+    <div id="game-layer" class="flex flex-col items-center justify-center w-full">
+        
+        <div id="menu-screen" class="flex flex-col items-center justify-center p-4">
+            <h1 class="text-5xl font-black text-[#00f0ff] tracking-widest mb-1 shadow-[0_0_15px_#00f0ff] uppercase text-center">BRANNGAME</h1>
+            <div class="flex items-center gap-2 mb-6 justify-center">
+                <p class="text-xs bg-red-600 border border-red-400 px-3 py-0.5 rounded text-white uppercase tracking-widest font-black shadow-[0_0_10px_#ff0000]">⚡ SUPER ADMIN ⚡</p>
+            </div>
+            
+            <div class="mb-6 bg-[#121225] border border-yellow-500/50 px-6 py-2 rounded-full flex items-center gap-2 text-xl font-bold text-yellow-400 shadow-[0_0_10px_rgba(234,179,8,0.2)]">
+                🪙 COINS: <span id="menu-coins">9999</span>
+            </div>
 
-    <canvas id="gameCanvas" width="360" height="460"></canvas>
+            <div class="flex flex-col gap-3 w-64">
+                <button onclick="openGarage()" class="bg-purple-600/30 border border-purple-500 hover:bg-purple-600 text-white font-bold py-3 rounded-lg transition uppercase tracking-wider mb-2 shadow-[0_0_10px_rgba(168,85,247,0.3)] cursor-pointer">🛠️ GARAGE / SHOP</button>
+                <button onclick="startGame('easy')" class="bg-green-500/20 border border-green-500 hover:bg-green-500 hover:text-black font-bold py-2 rounded-lg transition uppercase tracking-wider text-sm cursor-pointer">🟢 Play Easy</button>
+                <button onclick="startGame('medium')" class="bg-yellow-500/20 border border-yellow-500 hover:bg-yellow-500 hover:text-black font-bold py-2 rounded-lg transition uppercase tracking-wider text-sm cursor-pointer">🟡 Play Medium</button>
+                <button onclick="startGame('hard')" class="bg-orange-500/20 border border-orange-500 hover:bg-orange-500 hover:text-black font-bold py-2 rounded-lg transition uppercase tracking-wider text-sm cursor-pointer">🟠 Play Hard</button>
+                <button onclick="startGame('extreme')" class="bg-red-500/20 border border-red-500 hover:bg-red-500 hover:text-black font-bold py-2 rounded-lg transition uppercase tracking-wider text-sm cursor-pointer">🔴 Play EXTREME</button>
+            </div>
+        </div>
 
-    <div class="flex gap-16 mt-4 w-[360px] justify-center">
-        <button id="btn-left" class="bg-[#121225] border-2 border-[#00f0ff] active:bg-[#00f0ff] active:text-black w-24 h-16 rounded-xl text-2xl font-black flex items-center justify-center cursor-pointer">◀</button>
-        <button id="btn-right" class="bg-[#121225] border-2 border-[#00f0ff] active:bg-[#00f0ff] active:text-black w-24 h-16 rounded-xl text-2xl font-black flex items-center justify-center cursor-pointer">▶</button>
-    </div>
+        <div id="garage-screen" class="hidden flex flex-col items-center justify-center p-4">
+            <h2 class="text-3xl font-black text-purple-400 tracking-widest mb-2 uppercase">HANGAR / GARAGE</h2>
+            <div class="mb-6 text-yellow-400 font-bold text-lg">YOUR WALLET: 🪙 <span id="garage-coins">9999</span></div>
+            
+            <div class="flex flex-col gap-4 w-80 max-h-[320px] overflow-y-auto mb-6 px-2">
+                <div class="bg-[#121225] border border-blue-500 p-3 rounded-xl flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-blue-400">🔵 Default Fighter</h3>
+                        <p class="text-xs text-zinc-400">Stats: Standard Ship</p>
+                    </div>
+                    <button id="btn-ship-0" onclick="selectShip(0)" class="bg-blue-600 text-xs px-4 py-2 font-bold rounded-lg uppercase cursor-pointer">EQUIP</button>
+                </div>
+                <div class="bg-[#121225] border border-green-500 p-3 rounded-xl flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-green-400">🟢 Venom Phantom</h3>
+                        <p class="text-xs text-zinc-400">Stats: Extra Speed</p>
+                    </div>
+                    <button id="btn-ship-1" onclick="selectShip(1)" class="bg-zinc-700 text-xs px-3 py-2 font-bold rounded-lg text-white cursor-pointer">EQUIP</button>
+                </div>
+                <div class="bg-[#121225] border border-red-500 p-3 rounded-xl flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-red-500">🔥 Hellfire Apex</h3>
+                        <p class="text-xs text-zinc-400">Stats: Hyper Fast Weapon</p>
+                    </div>
+                    <button id="btn-ship-2" onclick="selectShip(2)" class="bg-zinc-700 text-xs px-3 py-2 font-bold rounded-lg text-white cursor-pointer">EQUIP</button>
+                </div>
+            </div>
+            <button onclick="closeGarage()" class="bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-2 px-8 rounded-lg text-sm tracking-wide transition uppercase cursor-pointer">🔙 BACK TO MENU</button>
+        </div>
 
-    <div id="game-over" class="hidden fixed inset-0 bg-black/90 flex flex-col items-center justify-center z-50">
-        <h1 class="text-3xl font-black text-red-500 tracking-wider mb-2">GAME OVER</h1>
-        <p id="final-score" class="text-sm text-zinc-400 mb-6">Skor Kamu: 0</p>
-        <button onclick="resetGame()" class="bg-[#00f0ff] text-black font-black py-3 px-8 rounded-lg shadow-[0_0_15px_#00f0ff] uppercase cursor-pointer">
-            TERBANG LAGI 🔄
-        </button>
+        <div id="gameplay-area" class="hidden flex flex-col items-center">
+            <div class="w-[360px] flex flex-col gap-1 mb-2 px-1">
+                <div class="flex justify-between items-center text-xs tracking-wider">
+                    <div>SCORE: <span id="score-text" class="text-[#00f0ff] font-bold">0</span></div>
+                    <div>🪙: <span id="coin-text" class="text-yellow-400 font-bold">0</span></div>
+                    <div>WAVE: <span id="wave-text" class="text-purple-400 font-bold">1</span></div>
+                    <div>HP: <span id="hp-text" class="text-[#ff007f] font-bold">3</span></div>
+                </div>
+                <div id="boss-hp-container" class="w-full bg-zinc-800 h-2.5 rounded-full mt-1 border border-red-500 hidden overflow-hidden shadow-[0_0_10px_rgba(239,68,68,0.5)]">
+                    <div id="boss-hp-bar" class="bg-red-600 h-full w-full transition-all duration-75"></div>
+                </div>
+            </div>
+
+            <canvas id="gameCanvas" width="360" height="460"></canvas>
+
+            <div class="flex gap-16 mt-4 w-[360px] justify-center">
+                <button id="btn-left" class="bg-[#121225] border-2 border-[#00f0ff] active:bg-[#00f0ff] active:text-black w-24 h-16 rounded-xl text-2xl font-black flex items-center justify-center cursor-pointer">◀</button>
+                <button id="btn-right" class="bg-[#121225] border-2 border-[#00f0ff] active:bg-[#00f0ff] active:text-black w-24 h-16 rounded-xl text-2xl font-black flex items-center justify-center cursor-pointer">▶</button>
+            </div>
+        </div>
+
+        <div id="game-over" class="hidden fixed inset-0 bg-black/95 flex flex-col items-center justify-center z-50">
+            <h1 id="end-title" class="text-4xl font-black text-[#ff007f] tracking-widest mb-2">MISSION FAILED</h1>
+            <p id="final-score" class="text-xl text-zinc-400 mb-1">Skor Akhir: 0</p>
+            <p id="final-coins" class="text-lg text-yellow-400 font-bold mb-6">Koin Didapat: +0</p>
+            <button onclick="backToMenu()" class="bg-[#00f0ff] hover:bg-[#00c8d7] text-black font-black py-3 px-8 rounded-lg transition-all shadow-[0_0_15px_#00f0ff] uppercase cursor-pointer">
+                RETURN TO BASE 🔄
+            </button>
+        </div>
+
     </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Struktur Data Player (Pesawat Segitiga Cyan)
-        let player = { x: 160, y: 390, width: 40, height: 30, speed: 7 };
+        // Akun Admin Otomatis Koin Full
+        let totalCoins = 9999; 
+        let activeShipIndex = 0; 
+
+        const shipTemplates = [
+            { name: "Default Fighter", speed: 6.0, shootSpeed: 280, color: '#00f0ff' },
+            { name: "Venom Phantom", speed: 8.5, shootSpeed: 240, color: '#00ff66' },
+            { name: "Hellfire Apex", speed: 6.5, shootSpeed: 170, color: '#ff3333' }
+        ];
+
+        let player = { x: 160, y: 390, width: 40, height: 30, speed: 6 };
+        let bullets = []; let enemies = []; let enemyBullets = []; let items = []; let particles = [];
+        let boss = { x: 130, y: -100, width: 100, height: 50, hp: 100, maxHp: 100, speed: 2, direction: 1, active: false };
         
-        // Array Penyimpanan Objek Game
-        let bullets = [];
-        let enemies = [];
-        let particles = [];
+        let score = 0; let sessionCoins = 0; let hp = 3; let weaponLevel = 1;
+        let currentWave = 1; let waveKills = 0; let gameOver = false; let gameActive = false;
+        let isShielded = false; let shieldTimer = 0;
         
-        // Aturan Dasar Game
-        let score = 0;
-        let hp = 3;
-        let currentWave = 1;
-        let waveKills = 0;
-        let gameOver = false;
-        
-        let lastShot = 0;
-        let lastSpawn = 0;
-        let keys = {};
+        let keys = {}; let enemySpeedModifier = 1; let spawnInterval = 1200;
+        let lastSpawn = 0; let lastShot = 0; let lastBossShot = 0; let shootSpeed = 280;
         let activeMove = null;
 
-        // Kontrol Keyboard (PC/Laptop)
+        // Listener Keyboard PC
         window.addEventListener('keydown', (e) => { keys[e.code] = true; });
         window.addEventListener('keyup', (e) => { keys[e.code] = false; });
 
-        // Kontrol Sentuh Bergerak Instan (HP)
-        const btnLeft = document.getElementById('btn-left');
-        const btnRight = document.getElementById('btn-right');
+        // SISTEM AMAN: Inisialisasi dijalankan setelah seluruh elemen HTML selesai di-render browser
+        window.onload = function() {
+            document.getElementById('menu-coins').innerText = totalCoins;
+            document.getElementById('garage-coins').innerText = totalCoins;
 
-        btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); activeMove = 'left'; });
-        btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); activeMove = 'right'; });
-        window.addEventListener('touchend', () => activeMove = null);
+            const btnLeft = document.getElementById('btn-left');
+            const btnRight = document.getElementById('btn-right');
 
-        // Kontrol Alternatif Klik Mouse (Tes di browser PC pakai mouse)
-        btnLeft.addEventListener('mousedown', () => activeMove = 'left');
-        btnRight.addEventListener('mousedown', () => activeMove = 'right');
-        window.addEventListener('mouseup', () => activeMove = null);
+            if(btnLeft && btnRight) {
+                btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); activeMove = 'left'; });
+                btnLeft.addEventListener('mousedown', () => { activeMove = 'left'; });
+                
+                btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); activeMove = 'right'; });
+                btnRight.addEventListener('mousedown', () => { activeMove = 'right'; });
+                
+                window.addEventListener('touchend', () => activeMove = null);
+                window.addEventListener('mouseup', () => activeMove = null);
+            }
 
-        // Fungsi Otomatis Memulai Game saat Halaman Terbuka
-        function init() {
-            score = 0;
-            hp = 3;
-            currentWave = 1;
-            waveKills = 0;
-            bullets = [];
-            enemies = [];
-            particles = [];
-            player.x = 160;
-            gameOver = false;
+            // Loop internal super lancar untuk tombol geser HP/Mouse Hold
+            setInterval(() => {
+                if (!gameActive || gameOver) return;
+                if (activeMove === 'left' && player.x > 0) player.x -= player.speed;
+                if (activeMove === 'right' && player.x < canvas.width - player.width) player.x += player.speed;
+            }, 1000 / 60);
+        };
+
+        function openGarage() {
+            document.getElementById('menu-screen').classList.add('hidden');
+            updateGarageButtons();
+            document.getElementById('garage-screen').classList.remove('hidden');
+        }
+
+        function closeGarage() {
+            document.getElementById('garage-screen').classList.add('hidden');
+            document.getElementById('menu-screen').classList.remove('hidden');
+        }
+
+        function updateGarageButtons() {
+            for (let i = 0; i < 3; i++) {
+                const btn = document.getElementById(`btn-ship-${i}`);
+                if (activeShipIndex === i) {
+                    btn.innerText = "ACTIVE";
+                    btn.className = "bg-green-600 text-xs px-3 py-2 font-bold rounded-lg text-white border border-white";
+                } else {
+                    btn.innerText = "EQUIP";
+                    btn.className = "bg-blue-600 hover:bg-blue-500 text-xs px-4 py-2 font-bold rounded-lg text-white";
+                }
+            }
+        }
+
+        function selectShip(index) {
+            activeShipIndex = index;
+            updateGarageButtons();
+            if (navigator.vibrate) navigator.vibrate(50);
+        }
+
+        function startGame(difficulty) {
+            document.getElementById('menu-screen').classList.add('hidden');
+            document.getElementById('gameplay-area').classList.remove('hidden');
             
-            document.getElementById('game-over').classList.add('hidden');
+            const currentShipConfig = shipTemplates[activeShipIndex];
+            player.speed = currentShipConfig.speed;
+            shootSpeed = currentShipConfig.shootSpeed;
+
+            if (difficulty === 'easy') {
+                hp = 4; enemySpeedModifier = 1.1; spawnInterval = 1300; boss.maxHp = 60;
+            } else if (difficulty === 'medium') {
+                hp = 3; enemySpeedModifier = 1.7; spawnInterval = 1000; boss.maxHp = 120;
+            } else if (difficulty === 'hard') {
+                hp = 2; enemySpeedModifier = 2.4; spawnInterval = 800; boss.maxHp = 200;
+            } else if (difficulty === 'extreme') {
+                hp = 1; enemySpeedModifier = 3.3; spawnInterval = 500; boss.maxHp = 320;
+            }
+
+            score = 0; sessionCoins = 0; weaponLevel = 1; currentWave = 1; waveKills = 0;
+            isShielded = false; bullets = []; enemies = []; enemyBullets = []; items = []; particles = [];
+            
+            boss.hp = boss.maxHp; boss.x = 130; boss.y = -100; boss.active = false;
+            document.getElementById('boss-hp-container').classList.add('hidden');
+            player.x = 160; gameOver = false; gameActive = true;
+
             updateHUD();
             requestAnimationFrame(gameLoop);
         }
 
-        function updateHUD() {
-            document.getElementById('score-text').innerText = score;
-            document.getElementById('hp-text').innerText = hp;
-            document.getElementById('wave-text').innerText = currentWave;
+        function createExplosion(x, y, color) {
+            for (let i = 0; i < 10; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 5, vy: (Math.random() - 0.5) * 5,
+                    radius: Math.random() * 2.5 + 1, alpha: 1, color: color
+                });
+            }
         }
 
-        // Logika Mekanik Gerakan, Peluru, dan Musuh
-        function update(timestamp) {
-            if (gameOver) return;
-
-            // Membaca input pergerakan pesawat
-            if (keys['ArrowLeft'] || keys['KeyA'] || activeMove === 'left') {
-                if (player.x > 0) player.x -= player.speed;
-            }
-            if (keys['ArrowRight'] || keys['KeyD'] || activeMove === 'right') {
-                if (player.x < canvas.width - player.width) player.x += player.speed;
-            }
-
-            // Sistem Tembak Otomatis (Auto-Shoot tiap 250ms)
-            if (timestamp - lastShot > 250) {
-                bullets.push({ x: player.x + player.width / 2 - 2, y: player.y, width: 4, height: 12, speed: 8 });
+        function autoShoot(timestamp) {
+            if (timestamp - lastShot > shootSpeed) {
+                if (weaponLevel === 1) {
+                    bullets.push({ x: player.x + player.width / 2 - 2, y: player.y, width: 4, height: 12, speed: 9 });
+                } else if (weaponLevel === 2) {
+                    bullets.push({ x: player.x + 4, y: player.y + 10, width: 4, height: 12, speed: 9 });
+                    bullets.push({ x: player.x + player.width - 8, y: player.y + 10, width: 4, height: 12, speed: 9 });
+                } else if (weaponLevel >= 3) {
+                    bullets.push({ x: player.x + player.width / 2 - 2, y: player.y, width: 4, height: 12, speed: 9 });
+                    bullets.push({ x: player.x + 2, y: player.y + 10, width: 4, height: 12, speed: 9 });
+                    bullets.push({ x: player.x + player.width - 6, y: player.y + 10, width: 4, height: 12, speed: 9 });
+                }
                 lastShot = timestamp;
             }
+        }
 
-            // Gerakan Peluru Ke Atas
-            bullets.forEach((bullet, index) => {
-                bullet.y -= bullet.speed;
-                if (bullet.y < 0) bullets.splice(index, 1);
-            });
-
-            // Munculkan Musuh Kotak Merah secara berkala
-            let spawnDelay = currentWave === 1 ? 1200 : 800;
-            if (timestamp - lastSpawn > spawnDelay) {
+        function spawnEnemy(timestamp) {
+            if (boss.active || currentWave > 2) return;
+            if (timestamp - lastSpawn > spawnInterval) {
+                let size = Math.random() * 15 + 20;
                 enemies.push({
-                    x: Math.random() * (canvas.width - 25),
-                    y: -25, width: 25, height: 25,
-                    speed: Math.random() * 2 + (currentWave * 1.2)
+                    x: Math.random() * (canvas.width - size), y: -size,
+                    width: size, height: size,
+                    speed: (Math.random() * 1.5 + 1) * enemySpeedModifier
                 });
                 lastSpawn = timestamp;
             }
+        }
 
-            // Pergerakan Musuh Ke Bawah
+        function update(timestamp) {
+            if (gameOver || !gameActive) return;
+
+            if (keys['ArrowLeft'] || keys['KeyA']) { if (player.x > 0) player.x -= player.speed; }
+            if (keys['ArrowRight'] || keys['KeyD']) { if (player.x < canvas.width - player.width) player.x += player.speed; }
+
+            autoShoot(timestamp);
+
+            if (isShielded && timestamp > shieldTimer) { isShielded = false; updateHUD(); }
+
+            particles.forEach((p, index) => {
+                p.x += p.vx; p.y += p.vy; p.alpha -= 0.02;
+                if (p.alpha <= 0) particles.splice(index, 1);
+            });
+
+            bullets.forEach((bullet, bIndex) => {
+                bullet.y -= bullet.speed;
+                if (boss.active && checkCollision(bullet, boss)) {
+                    bullets.splice(bIndex, 1);
+                    boss.hp -= (weaponLevel === 1) ? 2 : (weaponLevel === 2) ? 4 : 6;
+                    createExplosion(bullet.x, bullet.y, '#ff0000');
+                    
+                    let hpPercent = (boss.hp / boss.maxHp) * 100;
+                    document.getElementById('boss-hp-bar').style.width = `${Math.max(0, hpPercent)}%`;
+
+                    if (boss.hp <= 0) {
+                        createExplosion(boss.x + 50, boss.y + 25, '#ff007f');
+                        score += 500; sessionCoins += 50; 
+                        endGame(true);
+                    }
+                    return;
+                }
+                if (bullet.y < 0) bullets.splice(bIndex, 1);
+            });
+
+            if (!boss.active) {
+                spawnEnemy(timestamp);
+            } else {
+                if (boss.y < 40) boss.y += 1.5;
+                boss.x += boss.speed * boss.direction;
+                if (boss.x <= 0 || boss.x >= canvas.width - boss.width) boss.direction *= -1;
+
+                if (timestamp - lastBossShot > 800) {
+                    enemyBullets.push({ x: boss.x + 15, y: boss.y + boss.height, width: 8, height: 8, speed: 4.5 });
+                    enemyBullets.push({ x: boss.x + boss.width - 23, y: boss.y + boss.height, width: 8, height: 8, speed: 4.5 });
+                    lastBossShot = timestamp;
+                }
+            }
+
+            enemyBullets.forEach((eb, ebIndex) => {
+                eb.y += eb.speed;
+                if (checkCollision(eb, player)) {
+                    enemyBullets.splice(ebIndex, 1);
+                    if (!isShielded) { hp--; if (navigator.vibrate) navigator.vibrate(200); updateHUD(); }
+                }
+                if (eb.y > canvas.height) enemyBullets.splice(ebIndex, 1);
+            });
+
             enemies.forEach((enemy, eIndex) => {
                 enemy.y += enemy.speed;
-
-                // Jika musuh lolos sampai batas bawah, nyawa berkurang
                 if (enemy.y > canvas.height) {
                     enemies.splice(eIndex, 1);
-                    hp--;
-                    updateHUD();
+                    if (!isShielded) { hp--; updateHUD(); }
                 }
 
-                // Cek tabrakan antara Pesawat Player dengan Musuh
                 if (checkCollision(player, enemy)) {
                     enemies.splice(eIndex, 1);
-                    hp--;
-                    createExplosion(enemy.x, enemy.y, '#ff0055');
-                    updateHUD();
+                    createExplosion(enemy.x, enemy.y, '#ff007f');
+                    if (!isShielded) { hp--; if (navigator.vibrate) navigator.vibrate(200); updateHUD(); }
                 }
 
-                // Cek peluru mengenai musuh
                 bullets.forEach((bullet, bIndex) => {
                     if (checkCollision(bullet, enemy)) {
-                        createExplosion(enemy.x + 12, enemy.y + 12, '#ff007f');
+                        createExplosion(enemy.x + enemy.width/2, enemy.y + enemy.height/2, '#ff007f');
+                        
+                        let itemRand = Math.random();
+                        if (itemRand < 0.25) { 
+                            items.push({ x: enemy.x, y: enemy.y, width: 12, height: 12, speed: 2, type: 'coin' });
+                        } else if (itemRand >= 0.25 && itemRand < 0.50) { 
+                            let rand = Math.random();
+                            let type = 'bullet';
+                            if (rand > 0.40 && rand < 0.75) type = 'heal';
+                            if (rand >= 0.75) type = 'shield';
+                            items.push({ x: enemy.x, y: enemy.y, width: 14, height: 14, speed: 2, type: type });
+                        }
+
                         enemies.splice(eIndex, 1);
                         bullets.splice(bIndex, 1);
-                        score += 10;
-                        waveKills++;
+                        score += 10; waveKills++;
 
-                        // Naik Tingkat Kesulitan setelah hancurkan 15 musuh
-                        if (waveKills >= 15 && currentWave === 1) {
-                            currentWave = 2;
+                        if (currentWave === 1 && waveKills >= 12) {
+                            currentWave = 2; waveKills = 0;
+                        } else if (currentWave === 2 && waveKills >= 12) {
+                            currentWave = "BOSS"; boss.active = true;
+                            document.getElementById('boss-hp-container').classList.remove('hidden');
                         }
                         updateHUD();
                     }
                 });
             });
 
-            // Update partikel ledakan hancur
-            particles.forEach((p, index) => {
-                p.x += p.vx; p.y += p.vy; p.alpha -= 0.02;
-                if (p.alpha <= 0) particles.splice(index, 1);
-            });
+            items.forEach((item, iIndex) => {
+                item.y += item.speed;
+                if (item.y > canvas.height) items.splice(iIndex, 1);
 
-            // Kondisi Kalah Game Over
-            if (hp <= 0) {
-                gameOver = true;
-                document.getElementById('final-score').innerText = `Skor Kamu: ${score} Poin`;
-                document.getElementById('game-over').classList.remove('hidden');
-            }
-        }
-
-        // Render Gambar Grafik Objek di Canvas
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Gambar Efek Partikel Ledakan
-            particles.forEach(p => {
-                ctx.save();
-                ctx.globalAlpha = p.alpha;
-                ctx.fillStyle = p.color;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            });
-
-            // Gambar Pesawat Player (Berbentuk Segitiga Neon Cyan)
-            ctx.fillStyle = '#00f0ff';
-            ctx.shadowColor = '#00f0ff';
-            ctx.shadowBlur = 10;
-            ctx.beginPath();
-            ctx.moveTo(player.x + player.width / 2, player.y);
-            ctx.lineTo(player.x, player.y + player.height);
-            ctx.lineTo(player.x + player.width, player.y + player.height);
-            ctx.closePath();
-            ctx.fill();
-
-            // Gambar Peluru Laser Biru
-            ctx.fillStyle = '#00ffff';
-            ctx.shadowColor = '#00ffff';
-            ctx.shadowBlur = 5;
-            bullets.forEach(b => ctx.fillRect(b.x, b.y, b.width, b.height));
-
-            // Gambar Musuh Alien Kotak Merah
-            ctx.fillStyle = '#ff3366';
-            ctx.shadowColor = '#ff3366';
-            ctx.shadowBlur = 8;
-            enemies.forEach(e => ctx.fillRect(e.x, e.y, e.width, e.height));
-
-            ctx.shadowBlur = 0; // Reset shadow biar tidak berat
-        }
-
-        // Hitung matematika tabrakan kotak persegi
-        function checkCollision(r1, r2) {
-            return r1.x < r2.x + r2.width && r1.x + r1.width > r2.x &&
-                   r1.y < r2.y + r2.height && r1.y + r1.height > r2.y;
-        }
-
-        function createExplosion(x, y, color) {
-            for (let i = 0; i < 8; i++) {
-                particles.push({
-                    x: x, y: y,
-                    vx: (Math.random() - 0.5) * 5,
-                    vy: (Math.random() - 0.5) * 5,
-                    radius: Math.random() * 3 + 1,
-                    alpha: 1, color: color
-                });
-            }
-        }
-
-        function resetGame() {
-            init();
-        }
-
-        // Jalankan game saat semua aset siap
-        window.onload = init;
-    </script>
-</body>
-</html>
+                if (checkCollision(player, item)) {
+                    if (item.type === 'coin') { sessionCoins += 5; } 
+                    else if (item.type === 'bullet') { if (weaponLevel < 3) weaponLevel++; }
+                    else if (item.type === 'heal') { hp++; }
+            
