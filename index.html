@@ -3,64 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BRANNGAME - Anti Block Edition</title>
+    <title>BRANNGAME - Direct Play</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #05050a; }
+        body { background-color: #05050a; overflow: hidden; }
         canvas { border: 2px solid #00f0ff; background: #0b0b16; box-shadow: 0 0 20px rgba(0, 240, 255, 0.2); }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen font-mono text-white p-4 select-none">
 
-    <div id="auth-layer" class="w-full max-w-sm flex flex-col items-center justify-center min-h-[80vh]">
-        <h1 class="text-5xl font-black text-[#00f0ff] tracking-widest mb-1 shadow-[0_0_15px_#00f0ff] uppercase text-center">BRANNGAME</h1>
-        <p class="text-xs text-zinc-500 mb-8 uppercase tracking-widest text-center">Authentication Secure</p>
-        
-        <div id="login-box" class="bg-[#121225] border border-[#00f0ff]/30 p-6 rounded-2xl w-full shadow-[0_0_20px_rgba(0,240,255,0.1)]">
-            <h2 class="text-center font-bold text-sm text-[#00f0ff] uppercase tracking-wider mb-4">🔓 LOGIN SYSTEM</h2>
-            <div class="mb-4">
-                <label class="block text-xs text-zinc-400 uppercase tracking-wider mb-1">Username</label>
-                <input type="text" id="login-username" placeholder="Username..." class="w-full bg-[#05050a] border border-zinc-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#00f0ff] text-white">
-            </div>
-            <div class="mb-4">
-                <label class="block text-xs text-zinc-400 uppercase tracking-wider mb-1">Password</label>
-                <input type="password" id="login-password" placeholder="Password..." class="w-full bg-[#05050a] border border-zinc-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#00f0ff] text-white">
-            </div>
-            <button onclick="handleLogin()" class="w-full bg-[#00f0ff] hover:bg-[#00c8d7] text-black font-black py-2.5 rounded-lg transition uppercase tracking-wider text-sm shadow-[0_0_10px_#00f0ff] mb-4 cursor-pointer">
-                LOGIN
-            </button>
-            <div class="text-center text-xs text-zinc-400">
-                Belum punya akun? <button onclick="switchAuthBox('register')" class="text-[#00f0ff] underline focus:outline-none cursor-pointer">Daftar di sini</button>
-            </div>
-            <p id="login-error" class="text-red-500 text-xs text-center mt-3 hidden animate-pulse">❌ Username atau Password salah!</p>
-        </div>
-
-        <div id="register-box" class="bg-[#121225] border border-purple-500/30 p-6 rounded-2xl w-full shadow-[0_0_20px_rgba(168,85,247,0.1)] hidden">
-            <h2 class="text-center font-bold text-sm text-purple-400 uppercase tracking-wider mb-4">📝 REGISTER SYSTEM</h2>
-            <div class="mb-4">
-                <label class="block text-xs text-zinc-400 uppercase tracking-wider mb-1">Username Baru</label>
-                <input type="text" id="reg-username" placeholder="Buat username..." class="w-full bg-[#05050a] border border-zinc-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 text-white">
-            </div>
-            <div class="mb-4">
-                <label class="block text-xs text-zinc-400 uppercase tracking-wider mb-1">Password Baru</label>
-                <input type="password" id="reg-password" placeholder="Buat password..." class="w-full bg-[#05050a] border border-zinc-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 text-white">
-            </div>
-            <button onclick="handleRegister()" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-black py-2.5 rounded-lg transition uppercase tracking-wider text-sm shadow-[0_0_10px_rgba(168,85,247,0.5)] mb-4 cursor-pointer">
-                DAFTAR AKUN
-            </button>
-            <div class="text-center text-xs text-zinc-400">
-                Sudah punya akun? <button onclick="switchAuthBox('login')" class="text-purple-400 underline focus:outline-none cursor-pointer">Login di sini</button>
-            </div>
-            <p id="reg-status" class="text-xs text-center mt-3 hidden"></p>
-        </div>
-    </div>
-
-    <div id="game-layer" class="hidden flex flex-col items-center justify-center w-full">
+    <div id="game-layer" class="flex flex-col items-center justify-center w-full">
         
         <div id="menu-screen" class="flex flex-col items-center justify-center p-4">
-            <h1 class="text-5xl font-black text-[#00f0ff] tracking-widest mb-1 shadow-[0_0_15px_#00f0ff] uppercase">BRANNGAME</h1>
-            <div class="flex items-center gap-2 mb-6">
-                <p id="user-badge" class="text-xs bg-zinc-800 border border-zinc-600 px-3 py-0.5 rounded text-zinc-400 uppercase tracking-widest font-bold">PLAYER</p>
+            <h1 class="text-5xl font-black text-[#00f0ff] tracking-widest mb-1 shadow-[0_0_15px_#00f0ff] uppercase text-center">BRANNGAME</h1>
+            <div class="flex items-center gap-2 mb-6 justify-center">
+                <p id="user-badge" class="text-xs bg-red-600 border border-red-400 px-3 py-0.5 rounded text-white uppercase tracking-widest font-black shadow-[0_0_10px_#ff0000]">⚡ SUPER ADMIN ⚡</p>
             </div>
             
             <div class="mb-6 bg-[#121225] border border-yellow-500/50 px-6 py-2 rounded-full flex items-center gap-2 text-xl font-bold text-yellow-400 shadow-[0_0_10px_rgba(234,179,8,0.2)]">
@@ -142,13 +99,10 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Database akun lokal
-        let userDatabase = {}; 
-
-        let totalCoins = 0; 
-        let ownedShips = [true, false, false]; 
+        // Otomatis Admin Mode Aktif & Semua Pesawat Terbuka
+        let totalCoins = 9999; 
+        let ownedShips = [true, true, true]; 
         let activeShipIndex = 0; 
-        let isAdminMode = false;
 
         const shipTemplates = [
             { name: "Default Fighter", speed: 6.0, shootSpeed: 280, color: '#00f0ff' },
@@ -175,95 +129,8 @@
         document.getElementById('btn-right').addEventListener('touchstart', (e) => { e.preventDefault(); activeMove = 'right'; });
         window.addEventListener('touchend', () => activeMove = null);
 
-        // FITUR SWITCH BOX DI AUTH LAYER
-        function switchAuthBox(target) {
-            if (target === 'register') {
-                document.getElementById('login-box').classList.add('hidden');
-                document.getElementById('register-box').classList.remove('hidden');
-                document.getElementById('reg-status').classList.add('hidden');
-            } else {
-                document.getElementById('register-box').classList.add('hidden');
-                document.getElementById('login-box').classList.remove('hidden');
-                document.getElementById('login-error').classList.add('hidden');
-            }
-        }
-
-        // AKSI REGISTER
-        function handleRegister() {
-            const user = document.getElementById('reg-username').value.trim();
-            const pass = document.getElementById('reg-password').value.trim();
-            const statusTxt = document.getElementById('reg-status');
-
-            if (!user || !pass) {
-                statusTxt.innerText = "❌ Kolom tidak boleh kosong!";
-                statusTxt.className = "text-red-500 text-xs text-center mt-3";
-                statusTxt.classList.remove('hidden');
-                triggerVibrate(300);
-                return;
-            }
-
-            if (user.toLowerCase() === 'admin') {
-                statusTxt.innerText = "❌ Username 'admin' dikunci sistem!";
-                statusTxt.className = "text-red-500 text-xs text-center mt-3";
-                statusTxt.classList.remove('hidden');
-                triggerVibrate(300);
-                return;
-            }
-
-            if (userDatabase[user]) {
-                statusTxt.innerText = "❌ Username sudah digunakan!";
-                statusTxt.className = "text-red-500 text-xs text-center mt-3";
-                statusTxt.classList.remove('hidden');
-                triggerVibrate(300);
-            } else {
-                userDatabase[user] = pass;
-                statusTxt.innerText = "✅ Berhasil mendaftar! Silakan login.";
-                statusTxt.className = "text-green-400 text-xs text-center mt-3";
-                statusTxt.classList.remove('hidden');
-                triggerVibrate(100);
-
-                document.getElementById('reg-username').value = "";
-                document.getElementById('reg-password').value = "";
-            }
-        }
-
-        // AKSI LOGIN
-        function handleLogin() {
-            const userIn = document.getElementById('login-username').value.trim();
-            const passIn = document.getElementById('login-password').value.trim();
-            const errorTxt = document.getElementById('login-error');
-            const badge = document.getElementById('user-badge');
-
-            // 1. Cek Admin
-            if (userIn === 'admin' && passIn === 'admin123') {
-                isAdminMode = true;
-                ownedShips = [true, true, true]; 
-                badge.innerText = "⚡ SUPER ADMIN ⚡";
-                badge.className = "text-xs bg-red-600 border border-red-400 px-3 py-0.5 rounded text-white uppercase tracking-widest font-black shadow-[0_0_10px_#ff0000]";
-                
-                // Transisi matikan layer Auth, nyalakan layer Game
-                document.getElementById('auth-layer').classList.add('hidden');
-                document.getElementById('game-layer').classList.remove('hidden');
-                document.getElementById('menu-coins').innerText = totalCoins;
-                triggerVibrate(150);
-            } 
-            // 2. Cek Hasil Daftar
-            else if (userDatabase[userIn] && userDatabase[userIn] === passIn) {
-                isAdminMode = false;
-                ownedShips = [true, false, false];
-                badge.innerText = `AGENT: ${userIn.toUpperCase()}`;
-                badge.className = "text-xs bg-zinc-800 border border-zinc-600 px-3 py-0.5 rounded text-zinc-400 uppercase tracking-widest font-bold";
-                
-                document.getElementById('auth-layer').classList.add('hidden');
-                document.getElementById('game-layer').classList.remove('hidden');
-                document.getElementById('menu-coins').innerText = totalCoins;
-                triggerVibrate(100);
-            } 
-            else {
-                errorTxt.classList.remove('hidden');
-                triggerVibrate(300);
-            }
-        }
+        // Langsung tampilkan koin di awal load
+        document.getElementById('menu-coins').innerText = totalCoins;
 
         function openGarage() {
             document.getElementById('menu-screen').classList.add('hidden');
@@ -279,41 +146,22 @@
         }
 
         function updateGarageButtons() {
-            const prices = [0, 100, 250];
             for (let i = 0; i < 3; i++) {
                 const btn = document.getElementById(`btn-ship-${i}`);
-                if (ownedShips[i]) {
-                    if (activeShipIndex === i) {
-                        btn.innerText = "ACTIVE";
-                        btn.className = "bg-green-600 text-xs px-3 py-2 font-bold rounded-lg text-white border border-white";
-                    } else {
-                        btn.innerText = "EQUIP";
-                        btn.className = "bg-blue-600 hover:bg-blue-500 text-xs px-4 py-2 font-bold rounded-lg text-white";
-                    }
+                if (activeShipIndex === i) {
+                    btn.innerText = "ACTIVE";
+                    btn.className = "bg-green-600 text-xs px-3 py-2 font-bold rounded-lg text-white border border-white";
                 } else {
-                    btn.innerText = `🪙 ${prices[i]}`;
-                    btn.className = "bg-amber-600 hover:bg-amber-500 text-xs px-3 py-2 font-bold rounded-lg text-white font-bold";
+                    btn.innerText = "EQUIP";
+                    btn.className = "bg-blue-600 hover:bg-blue-500 text-xs px-4 py-2 font-bold rounded-lg text-white";
                 }
             }
         }
 
         function selectShip(index) {
-            const prices = [0, 100, 250];
-            if (ownedShips[index]) {
-                activeShipIndex = index;
-            } else {
-                if (totalCoins >= prices[index]) {
-                    totalCoins -= prices[index];
-                    ownedShips[index] = true;
-                    activeShipIndex = index;
-                    document.getElementById('garage-coins').innerText = totalCoins;
-                    triggerVibrate(150);
-                } else {
-                    alert("Koin kamu tidak cukup!");
-                    return;
-                }
-            }
+            activeShipIndex = index;
             updateGarageButtons();
+            triggerVibrate(100);
         }
 
         function startGame(difficulty) {
@@ -327,4 +175,70 @@
             if (difficulty === 'easy') {
                 hp = 4; enemySpeedModifier = 1.1; spawnInterval = 1300; boss.maxHp = 60;
             } else if (difficulty === 'medium') {
-                hp = 3; enemySpeedModifier = 1.8; spawnInt
+                hp = 3; enemySpeedModifier = 1.8; spawnInterval = 1000; boss.maxHp = 120;
+            } else if (difficulty === 'hard') {
+                hp = 2; enemySpeedModifier = 2.5; spawnInterval = 800; boss.maxHp = 200;
+            } else if (difficulty === 'extreme') {
+                hp = 1; enemySpeedModifier = 3.5; spawnInterval = 500; boss.maxHp = 350;
+            }
+
+            score = 0; sessionCoins = 0; weaponLevel = 1; currentWave = 1; waveKills = 0;
+            isShielded = false; bullets = []; enemies = []; enemyBullets = []; items = []; particles = [];
+            
+            boss.hp = boss.maxHp; boss.x = 150; boss.y = -100; boss.active = false;
+            player.x = 180; gameOver = false; gameActive = true;
+
+            updateHUD();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function createExplosion(x, y, color) {
+            for (let i = 0; i < 12; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 6, vy: (Math.random() - 0.5) * 6,
+                    radius: Math.random() * 3 + 1, alpha: 1,
+                    decay: Math.random() * 0.03 + 0.01, color: color
+                });
+            }
+        }
+
+        function autoShoot(timestamp) {
+            if (timestamp - lastShot > shootSpeed) {
+                if (weaponLevel === 1) {
+                    bullets.push({ x: player.x + player.width / 2 - 2, y: player.y, width: 4, height: 12, speed: 9 });
+                } else if (weaponLevel === 2) {
+                    bullets.push({ x: player.x + 5, y: player.y + 10, width: 4, height: 12, speed: 9 });
+                    bullets.push({ x: player.x + player.width - 9, y: player.y + 10, width: 4, height: 12, speed: 9 });
+                } else if (weaponLevel >= 3) {
+                    bullets.push({ x: player.x + player.width / 2 - 2, y: player.y, width: 4, height: 12, speed: 9 });
+                    bullets.push({ x: player.x + 2, y: player.y + 10, width: 4, height: 12, speed: 9 });
+                    bullets.push({ x: player.x + player.width - 6, y: player.y + 10, width: 4, height: 12, speed: 9 });
+                }
+                lastShot = timestamp;
+            }
+        }
+
+        function spawnEnemy(timestamp) {
+            if (boss.active || currentWave > 2) return;
+            if (timestamp - lastSpawn > spawnInterval) {
+                let size = Math.random() * 20 + 20;
+                enemies.push({
+                    x: Math.random() * (canvas.width - size), y: -size,
+                    width: size, height: size,
+                    speed: (Math.random() * 1.5 + 1) * enemySpeedModifier
+                });
+                lastSpawn = timestamp;
+            }
+        }
+
+        function update(timestamp) {
+            if (gameOver || !gameActive) return;
+
+            if (keys['ArrowLeft'] || keys['KeyA'] || activeMove === 'left') { if (player.x > 0) player.x -= player.speed; }
+            if (keys['ArrowRight'] || keys['KeyD'] || activeMove === 'right') { if (player.x < canvas.width - player.width) player.x += player.speed; }
+
+            autoShoot(timestamp);
+
+            if (isShielded && timestamp > shieldTimer) { is
+        
